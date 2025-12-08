@@ -1,4 +1,4 @@
-# 제목은 최대 50글자까지 아래에 작성: ex) <✨ feat>: Add OAuth2
+# 제목은 최대 50글자까지 아래에 작성: ex) ✨ feat: Add OAuth2
 # 본문은 아래에 작성
 
 # --- COMMIT END ---
