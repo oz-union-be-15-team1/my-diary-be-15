@@ -29,6 +29,3 @@ class UserQuestion(models.Model):
     class Meta:
         # User에게 같은 Question이 중복 할당되지 않도록 복합 인덱스 설정
         unique_together = ("user", "question")
-
-    def __str__(self):
-        return f"User {self.user_id} assigned Question {self.question_id}"

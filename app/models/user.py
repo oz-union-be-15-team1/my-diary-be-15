@@ -1,12 +1,17 @@
+# app/models/user.py (전체 내용)
+
 from tortoise import fields, models
-from tortoise.contrib.pydantic import pydantic_model_creator
-from datetime import datetime
+from datetime import datetime, timezone
+from .diary import Diary           # 💡 수정된 임포트
+from .bookmark import Bookmark     # 💡 수정된 임포트
+from .question import UserQuestion # 💡 수정된 임포트
 
 class User(models.Model):
     # USERS 테이블
     id = fields.IntField(pk=True)
     username = fields.CharField(max_length=50, unique=True)
     password_hash = fields.CharField(max_length=255)
+    email = fields.CharField(max_length=255, unique=True)
 
     # 💡 관계 정의 (역참조 이름 설정)
     # user.diaries로 접근 가능
@@ -32,7 +37,4 @@ class TokenBlacklist(models.Model):
     # 💡 관계 정의: user_id FK (USERS ||--o{ TOKEN_BLACKLIST)
     user = fields.ForeignKeyField('models.User', related_name='token_entries')
 
-    expired_at = fields.DatetimeField(default=datetime.utcnow)
-
-    def __str__(self):
-        return f"Token for User {self.user_id}"
+    expired_at = fields.DatetimeField(default=lambda: datetime.now(timezone.utc))

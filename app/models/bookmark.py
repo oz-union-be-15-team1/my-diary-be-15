@@ -13,6 +13,3 @@ class Bookmark(models.Model):
     class Meta:
         # User가 같은 Quote를 두 번 북마크하지 못하도록 복합 인덱스 설정 (선택적)
         unique_together = ("user", "quote")
-
-    def __str__(self):
-        return f"Bookmark by {self.user_id} for Quote {self.quote_id}"
