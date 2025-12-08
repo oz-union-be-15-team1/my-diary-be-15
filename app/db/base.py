@@ -1,27 +1,46 @@
-from sqlalchemy.ext.asyncio import AsyncAttrs
-from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy.ext.declarative import declared_attr
-from typing import Any
+# app/db/base.py
 
-# 모든 모델이 상속받을 기본 클래스 정의
-class Base(AsyncAttrs, DeclarativeBase):
-    """
-    SQLAlchemy의 DeclarativeBase를 상속받는 기본 클래스입니다.
-    AsyncAttrs를 추가하여 비동기적인 접근자 기능을 사용할 수 있게 합니다.
-    """
-    __abstract__ = True  # 이 클래스는 테이블로 생성되지 않고, 다른 모델에 상속될 것임을 명시
+from app.core.config import settings
+from typing import List
+from urllib.parse import urlparse  # 💡 이 줄을 추가합니다!
 
-    # 테이블 이름을 클래스 이름의 snake_case로 자동 생성하는 로직
-    @declared_attr
-    def __tablename__(cls) -> str:
-        # User -> user, DiaryPost -> diary_post
-        name = cls.__name__
-        import re
-        return re.sub(r'(?<!^)(?=[A-Z])', '_', name).lower()
+# 1. TORTOISE_MODELS 리스트 정의 (기존과 동일)
+TORTOISE_MODELS: List[str] = [
+    # 기존 파일들
+    "app.models.user", 
+    "app.models.diary",
+    "app.models.quote",
+    "app.models.question", 
+    "app.models.bookmark", 
+    "aerich.models", 
+]
 
-    # 모든 모델에서 사용할 수 있는 공통 속성 정의 (예시)
-    id: Any 
+# 2. DATABASE_URL을 파싱합니다.
+# urlparse를 사용하여 URI를 host, port, user 등으로 분리합니다.
+parsed_url = urlparse(settings.DATABASE_URL)
+DB_CONFIG = {
+    "host": parsed_url.hostname,
+    "port": parsed_url.port,
+    "user": parsed_url.username,
+    "password": parsed_url.password,
+    "database": parsed_url.path[1:], 
+}
 
-# 참고: 모델에서 사용할 모든 임포트 항목을 여기에 모아둘 수 있습니다.
-# 예: from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, Boolean
-#     from sqlalchemy.orm import relationship
+
+# 3. TORTOISE_ORM 딕셔너리 정의 (파싱된 값 사용)
+TORTOISE_ORM = {
+    "connections": {
+        "default": {
+            "engine": "tortoise.backends.asyncpg",
+            # db_url 대신 파싱된 개별 매개변수를 전달합니다.
+            "credentials": DB_CONFIG 
+        }
+    },
+    
+    "apps": {
+        "models": {
+            "models": TORTOISE_MODELS,  
+            "default_connection": "default",
+        }
+    }
+}
