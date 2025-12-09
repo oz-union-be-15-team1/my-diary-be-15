@@ -15,7 +15,8 @@ TORTOISE_MODELS: List[str] = [
 # settings.DATABASE_URL을 사용하여 PostgreSQL 연결 정보를 설정합니다.
 TORTOISE_ORM = {
     "connections": {
-        "default": settings.DATABASE_URL,
+        # 'default' 연결은 FastAPI에서 주로 사용되는 주 연결입니다.
+        "default": settings.db_url,  # config.py에서 로드된 DB 접속 URL
     },
     "apps": {
         "models": {
@@ -24,3 +25,5 @@ TORTOISE_ORM = {
         }
     }
 }
+
+
