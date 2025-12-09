@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Diary API 테스트 클라이언트</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f9; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        h1 { color: #333; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .api-section { margin-bottom: 25px; padding: 15px; border: 1px solid #ddd; border-radius: 6px; background-color: #fff; }
+        .api-section h2 { color: #007bff; margin-top: 0; }
+        input[type="text"], input[type="password"], textarea { width: 100%; padding: 10px; margin: 5px 0 15px 0; display: inline-block; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { background-color: #28a745; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; margin-right: 10px; }
+        button:hover { background-color: #218838; }
+        #response-output { background-color: #f8f9fa; border: 1px solid #ced4da; padding: 15px; border-radius: 4px; white-space: pre-wrap; margin-top: 15px; max-height: 400px; overflow-y: scroll; }
+        .token-display { font-weight: bold; color: #dc3545; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>My Diary API 테스트 클라이언트</h1>
+
+    <p><strong>🚨 현재 토큰:</strong> <span id="current-token" class="token-display">없음</span></p>
+    <p>테스트 전, Uvicorn 서버가 <span class="token-display">http://127.0.0.1:8000</span>에서 실행 중인지 확인하세요.</p>
+    <hr>
+
+    <div class="api-section">
+        <h2>1. 회원가입 (POST /api/v1/auth/register)</h2>
+        <label for="reg_username">사용자명:</label>
+        <input type="text" id="reg_username" value="testuser">
+        
+        <label for="reg_password">비밀번호:</label>
+        <input type="password" id="reg_password" value="12345678">
+
+        <label for="reg_email">이메일:</label>
+        <input type="text" id="reg_email" value="test@example.com">
+        
+        <button onclick="registerUser()">회원가입 실행</button>
+    </div>
+
+    <div class="api-section">
+        <h2>2. 로그인 (POST /api/v1/auth/login)</h2>
+        <label for="login_username">사용자명:</label>
+        <input type="text" id="login_username" value="testuser">
+        
+        <label for="login_password">비밀번호:</label>
+        <input type="password" id="login_password" value="12345678">
+        
+        <label for="login_email">이메일:</label>
+        <input type="text" id="login_email" value="test@example.com">
+
+        <button onclick="loginUser()">로그인 실행</button>
+        <p><small>로그인 성공 시, 위 '현재 토큰'이 업데이트됩니다.</small></p>
+    </div>
+
+    <div class="api-section">
+        <h2>3. 랜덤 질문 조회 (GET /api/v1/questions/random)</h2>
+        <button onclick="getRandomQuestion()">랜덤 질문 조회</button>
+        <p><small>이 기능은 로그인이 필요하며, DB에 질문 데이터가 있어야 합니다.</small></p>
+    </div>
+
+    <hr>
+    <h2>API 응답 결과</h2>
+    <div id="response-output">결과가 여기에 표시됩니다.</div>
+</div>
+
+<script>
+    // 🚨 서버 포트가 8000이 아닌 경우, 이 값을 수정해야 합니다.
+    const API_BASE_URL = 'http://127.0.0.1:8000/api/v1';
+    let ACCESS_TOKEN = '';
+
+    function updateTokenDisplay(token) {
+        ACCESS_TOKEN = token;
+        document.getElementById('current-token').innerText = token ? token : '없음';
+    }
+
+    function displayResponse(title, status, data) {
+        const output = document.getElementById('response-output');
+        output.innerHTML = `
+            <h3>${title} (${status})</h3>
+            <pre>${JSON.stringify(data, null, 2)}</pre>
+            <hr>` + output.innerHTML;
+    }
+
+    // --- 1. 회원가입 로직 ---
+    async function registerUser() {
+        const username = document.getElementById('reg_username').value;
+        const password = document.getElementById('reg_password').value;
+        const email = document.getElementById('reg_email').value;
+
+        const url = `${API_BASE_URL}/auth/register`;
+        const payload = { username, password, email };
+        
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await response.json();
+            displayResponse('회원가입 결과', response.status, data);
+        } catch (error) {
+            displayResponse('회원가입 결과', 'ERROR', { message: error.message });
+        }
+    }
+
+    // --- 2. 로그인 로직 ---
+    async function loginUser() {
+        const username = document.getElementById('login_username').value;
+        const password = document.getElementById('login_password').value;
+        // 💡 [수정] 이메일 값을 가져옵니다.
+        const email = document.getElementById('login_email').value; 
+
+        const url = `${API_BASE_URL}/auth/login`;
+        // 💡 [수정] 이메일을 payload에 포함합니다. (422 오류 방지)
+        const payload = { username, password, email };
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await response.json();
+
+            if (response.ok && data.access_token) {
+                updateTokenDisplay(data.access_token);
+                displayResponse('로그인 성공 & 토큰 저장', response.status, data);
+            } else {
+                updateTokenDisplay('');
+                displayResponse('로그인 실패', response.status, data);
+            }
+        } catch (error) {
+            displayResponse('로그인 결과', 'ERROR', { message: error.message });
+        }
+    }
+
+    // --- 3. 랜덤 질문 로직 ---
+    async function getRandomQuestion() {
+        if (!ACCESS_TOKEN) {
+            displayResponse('랜덤 질문 조회 실패', 401, { detail: "먼저 로그인하여 토큰을 발급받아야 합니다." });
+            return;
+        }
+
+        const url = `${API_BASE_URL}/questions/random`;
+        
+        try {
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: { 
+                    'Authorization': `Bearer ${ACCESS_TOKEN}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            const data = await response.json();
+            displayResponse('랜덤 질문 조회 결과', response.status, data);
+
+        } catch (error) {
+            displayResponse('랜덤 질문 조회 결과', 'ERROR', { message: error.message });
+        }
+    }
+</script>
+
+</body>
+</html>

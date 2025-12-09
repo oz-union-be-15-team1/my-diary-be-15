@@ -1,31 +1,31 @@
-# app/main.py
+# app/main.py (최종 정리 버전)
 
 from fastapi import FastAPI
-# 설정 파일 및 DB 세션 초기화 함수 임포트
-from .core.config import settings
-from .db.session import init_tortoise
-from .api.v1 import api_router  # 💡 [필수] v1 API의 최상위 라우터 임포트
+from fastapi.middleware.cors import CORSMiddleware
+from .api.v1 import api_router
+from .db.session import init_tortoise # DB 초기화 함수 임포트
 
-
-# 1. FastAPI 애플리케이션 인스턴스 정의
+# 1. FastAPI 앱 인스턴스 생성 (키워드 인수 사용)
 app = FastAPI(
-    title="My Diary API",
-    description="FastAPI, Tortoise ORM, and PostgreSQL Backend",
-    version="1.0.0",
+    title="My Diary API", 
+    version="1.0.0", 
+    docs_url="/docs",
+    redoc_url=None
 )
 
+# 2. CORS 미들웨어 등록
+origins = ["*"]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-# 2. 데이터베이스 연결 이벤트 등록
-# 서버 시작 시 ORM 설정 및 DB 연결을 시도합니다.
-init_tortoise(app)
+# 3. 💡 Tortoise ORM 초기화 호출 (미들웨어 후, 라우터 등록 전에 위치)
+# 이 호출은 @app.on_event("startup")에 DB 연결 로직을 등록합니다.
+init_tortoise(app) 
 
-
-# 3. API 라우터 등록 [필수 추가]
-# app/api/v1/__init__.py에 등록된 모든 라우터를 /api/v1 프리픽스로 등록합니다.
+# 4. 라우터 등록 (항상 마지막에)
 app.include_router(api_router, prefix="/api/v1")
-
-
-# 4. 테스트용 루트 라우터 (기존 코드)
-@app.get("/")
-def read_root():
-    return {"message": "Welcome to the FastAPI Backend!", "db_url_status": "Loaded from .env"}
