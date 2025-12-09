@@ -1,5 +1,5 @@
 from tortoise import fields, models
-from bookmark import Bookmark
+from app.models.bookmark import Bookmark
 
 class Quote(models.Model):
     # QUOTES 테이블
