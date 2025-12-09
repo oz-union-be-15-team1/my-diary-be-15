@@ -11,10 +11,23 @@ app = FastAPI(
     debug=settings.DEBUG,
 )
 
+# CORS 미들웨어 등록
+origins = ["*"]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Tortoise ORM 초기화 호출 (미들웨어 후, 라우터 등록 전에 위치)
+# 이 호출은 @app.on_event("startup")에 DB 연결 로직을 등록함
+init_tortoise(app)
+
+# 라우터 등록 (항상 마지막에)
 app.include_router(auth_router.router)
 app.include_router(diary_router.router)
-
-init_tortoise(app)
 
 @app.get("/", summary="DB 연결 헬스 체크")
 async def health_check():
