@@ -24,8 +24,6 @@ class User(models.Model):
     # user.assigned_questions로 접근 가능
     assigned_questions: fields.ReverseRelation["UserQuestion"]
 
-    def __str__(self):
-        return self.username
 
 class TokenBlacklist(models.Model):
     # TOKEN_BLACKLIST 테이블

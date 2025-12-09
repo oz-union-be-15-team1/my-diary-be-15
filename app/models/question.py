@@ -8,9 +8,6 @@ class Question(models.Model):
     # 💡 관계 정의: 역참조 (이 질문에 답변한 사용자 목록)
     answered_by: fields.ReverseRelation["UserQuestion"]
 
-    def __str__(self):
-        return self.question_text[:30]
-
 
 class UserQuestion(models.Model):
     # USER_QUESTIONS 테이블 (사용자와 질문의 N:M 관계를 위한 중개 테이블)
