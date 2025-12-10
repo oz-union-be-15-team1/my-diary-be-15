@@ -7,7 +7,6 @@ TORTOISE_MODELS: List[str] = [
     "app.models.diary",  # 다이어리(Diary) 모델 경로
     "app.models.quote",  # 명언(Quote) 모델 경로
     "app.models.question",  # 질문(Question) 모델 경로
-    "app.models.token_blacklist",
     "aerich.models",  # Aerich 마이그레이션 도구 사용 시 필요한 모델
 ]
 
@@ -25,5 +24,3 @@ TORTOISE_ORM = {
         }
     }
 }
-
-
