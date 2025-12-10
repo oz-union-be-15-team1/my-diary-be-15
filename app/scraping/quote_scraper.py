@@ -17,20 +17,16 @@ async def scrape_and_save_quotes(pages: int = 5):
                     continue
 
                 soup = BeautifulSoup(response.text, "html.parser")
-                # saramro.com 구조에 맞춰 선택자 수정 필요 (예시 구조 사용)
-                # 실제 사이트 구조 확인 후 .quote-content, .quote-author 등의 클래스명 조정 필요
-                quote_elements = soup.select("table tbody tr")  # 가상 클래스명
-                # print("0=" * 30)
-                print(quote_elements)
+                quote_elements = soup.select("table tbody tr")
 
                 for el in quote_elements:
-                    content_el = el.select_one("")
-                    author_el = el.select_one("")
-                    if not content_el:
+                    scraped = el.select_one("td[colspan='5']")
+                    if not scraped:
                         continue
 
-                    content = content_el.get_text(strip=True)
-                    author = author_el.get_text(strip=True) if author_el else "Unknown"
+                    cont_and_auth = scraped.get_text(strip=True).split("-")
+                    content = cont_and_auth[0]
+                    author = cont_and_auth[1][1:]
 
                     # 중복 확인 후 저장
                     exists = await Quote.filter(content=content).exists()
