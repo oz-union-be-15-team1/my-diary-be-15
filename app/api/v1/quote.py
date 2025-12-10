@@ -8,8 +8,24 @@ from app.services.quote_service import QuoteBookmarkService, QuoteService
 
 router = APIRouter(prefix="/quotes", tags=["Quotes"])
 
+
 """ #######################################
-################ 명언 ######################
+############ 명언 스크랩 #####################
+####################################### """
+@router.post(
+    "/scrape",
+    summary="명언 스크래핑",
+    description="saramro.com에서 명언을 스크래핑하여 DB에 저장",
+)
+async def scrape_quotes(
+    pages: int = Query(default=10, ge=1, le=100, description="스크래핑할 페이지 수"),
+):
+    result = await scrape_and_save_quotes(pages)
+    return result
+
+
+""" #######################################
+############ 명언 조회 ######################
 ####################################### """
 @router.get(
     "",
@@ -77,19 +93,3 @@ async def remove_bookmark(
 ):
     await QuoteBookmarkService.remove_bookmark(current_user, quote_id)
     return {"message": "북마크가 성공적으로 삭제되었습니다"}
-
-
-""" #######################################
-############ 명언 스크랩 #####################
-####################################### """
-@router.post(
-    "/scrape",
-    summary="명언 스크래핑",
-    description="saramro.com에서 명언을 스크래핑하여 DB에 저장",
-)
-async def scrape_quotes(
-    # pages: int = Query(default=10, ge=1, le=100, description="스크래핑할 페이지 수"),
-    pages: int = Query(default=10, ge=1, le=100, description="스크래핑할 페이지 수"),
-):
-    result = await scrape_and_save_quotes(pages)
-    return result
