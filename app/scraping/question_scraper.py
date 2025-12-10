@@ -1,4 +1,4 @@
-from app.models import DailyQuestion
+from app.models.question import Question
 
 QUESTIONS_DATA = [
     {"content": "오늘 하루를 한 단어로 표현한다면 무엇이고, 그 이유는 무엇인가?", "category": "하루 돌아보기"},
@@ -84,16 +84,16 @@ QUESTIONS_DATA = [
 ]
 
 
-async def seed_questions():
+async def scrape_and_save_questions():
     saved_count = 0
 
     for data in QUESTIONS_DATA:
-        exists = await DailyQuestion.filter(content=data["content"]).exists()
+        exists = await Question.filter(content=data["content"]).exists()
         if not exists:
-            await DailyQuestion.create(**data)
+            await Question.create(**data)
             saved_count += 1
 
-    total_count = await DailyQuestion.all().count()
+    total_count = await Question.all().count()
     return {
         "message": f"Seed completed. Saved {saved_count} new questions. Total: {total_count}"
     }

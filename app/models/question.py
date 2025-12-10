@@ -24,12 +24,15 @@ class Question(models.Model):                                             # [2] 
     # ---------------------------------------------------------
     # [4] 질문 내용
     # ---------------------------------------------------------
-    question_text = fields.TextField()
+    content = fields.TextField()
     """
     동작 원리:
     - TEXT 타입 컬럼 생성
     - 길이 제한 없음
     """
+
+    # category 추가
+    category = fields.CharField(max_length=50, null=True)
 
     # ---------------------------------------------------------
     # [5] 역참조: 이 질문을 받은 사용자 목록
@@ -50,7 +53,7 @@ class Question(models.Model):                                             # [2] 
     # [6] 문자열 표현 (관리자 UI/로그 확인용)
     # ---------------------------------------------------------
     def __str__(self):
-        return self.question_text[:30]
+        return self.content[:30]
     """
     동작 원리:
     - print(question) 호출 시 앞 30글자만 보여줌
@@ -94,7 +97,7 @@ class UserQuestion(models.Model):                                         # [7] 
     # ---------------------------------------------------------
     # [10] question_id → QUESTIONS 테이블 FK
     # ---------------------------------------------------------
-    question = fields.ForeignKeyField(
+    content = fields.ForeignKeyField(
         'models.Question',
         related_name='assigned_users'
     )
@@ -106,6 +109,9 @@ class UserQuestion(models.Model):                                         # [7] 
 
     관계 구조: QUESTIONS ||--o{ USER_QUESTIONS
     """
+
+    # category 추가
+    category = fields.CharField(max_length=50, null=True)
 
     # ---------------------------------------------------------
     # [11] 사용자의 답변 내용 (옵션)
@@ -131,7 +137,7 @@ class UserQuestion(models.Model):                                         # [7] 
     # [13] 유니크 제약: User + Question 중복 할당 금지
     # ---------------------------------------------------------
     class Meta:
-        unique_together = ("user", "question")
+        unique_together = ("user", "content")
         """
         동작 원리:
         - 하나의 User가 같은 Question을 중복으로 배정받지 못하도록 하는 제약
