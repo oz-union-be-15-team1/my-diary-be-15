@@ -1,57 +1,86 @@
-# app/api/v1/question.py
-
-# FastAPI 핵심 모듈 임포트: 라우터 정의, 의존성 주입, 예외 처리
+#app\api\v1\question.py
 from fastapi import APIRouter, Depends, HTTPException
-# 서비스 계층 임포트: 실제 비즈니스 로직(랜덤 질문 조회)을 수행합니다.
-from app.services.question_service import QuestionService
-# ORM 모델 임포트: 인증 의존성 함수가 반환할 사용자 객체의 타입 힌트로 사용됩니다.
-from app.models.user import User
-# Pydantic 스키마 임포트: 응답 데이터의 형식과 유효성을 정의합니다.
-from app.schemas.question import Question_Pydantic
-# 인증 의존성 함수 임포트: 요청 헤더의 JWT 토큰을 검증하고 사용자 객체를 가져옵니다.
-from app.core.security import get_current_user
+from app.services.question_service import get_random_question
+# from app.core.security import get_current_user  # 향후 인증 적용 시 사용
 
-# 라우터 인스턴스 생성: 이 파일의 엔드포인트에 /questions 프리픽스와 태그를 할당합니다.
-router = APIRouter(prefix="/questions", tags=["Questions"])
+# ------------------------------------------------------------
+# APIRouter 설정
+# ------------------------------------------------------------
+# - FastAPI 라우터 그룹을 생성하는 역할.
+# - tags=["Questions"] 는 Swagger UI에서 질문 API 그룹 이름을 의미함.
+# - prefix는 main.py에서 "/api/v1/questions"로 이미 설정되어 있으므로,
+#   여기서는 prefix를 다시 지정하지 않고 엔드포인트만 작성한다.
+# ------------------------------------------------------------
+router = APIRouter(tags=["Questions"])
 
-# GET /api/v1/questions/random 엔드포인트 정의
-@router.get(
-    "/random",
-    # 응답 모델 정의: 이 함수가 성공적으로 반환할 JSON 데이터의 형식을 Question_Pydantic 스키마로 강제합니다.
-    response_model=Question_Pydantic,
-    summary="사용자에게 할당되지 않은 랜덤 질문 조회"
-)
-async def get_random_question(
-        # 💡 의존성 주입 (Authentication):
-        # 요청이 들어올 때마다 get_current_user 함수가 실행됩니다.
-        # 1. 요청 헤더에서 Bearer Token(JWT)을 추출합니다.
-        # 2. JWT를 디코딩하고 검증합니다.
-        # 3. 토큰의 user_id를 사용하여 DB에서 User 객체를 조회합니다.
-        # 4. 검증 실패 시: 401 Unauthorized 예외를 즉시 발생시켜 라우터 함수 진입을 막습니다.
-        # 5. 검증 성공 시: 조회된 User 객체를 'user' 변수에 할당합니다.
-        user: User = Depends(get_current_user)
-):
-    """인증된 사용자를 위한 랜덤 질문을 반환합니다."""
 
-    # 1. 서비스 계층 호출 및 오류 처리
-    try:
-        # QuestionService로 제어를 넘겨 랜덤 질문 조회 비즈니스 로직을 실행합니다.
-        # 이 함수는 Repository를 호출하여 DB에서 질문 모델 객체를 가져옵니다.
-        question = await QuestionService.get_random_question()
+# ============================================================
+# 랜덤 자기성찰 질문 제공 API
+# ------------------------------------------------------------
+# [HTTP 메서드]  GET
+# [엔드포인트]   /random
+#
+# [최종 URL]
+#   main.py에서:
+#       include_router(question_router, prefix="/api/v1/questions")
+#   → 최종 엔드포인트 URL:
+#       /api/v1/questions/random
+#
+# [역할]
+#   - 서비스 레이어의 get_random_question()을 호출하여
+#     데이터베이스에서 임의의 질문을 1개 가져와 사용자에게 반환.
+#
+# [구조]
+#   클라이언트 → Router(여기) → Service(question_service) → Model(DB)
+#
+# [인증]
+#   - 현재는 인증 필요 없음.
+#   - 추후 필요하면 Depends(get_current_user)를 삽입하면 된다.
+# ============================================================
+@router.get("/random")
+async def random_question_api():
+    """
+    랜덤 자기성찰 질문을 반환하는 API 엔드포인트.
 
-    except Exception as e:
-        # DB 연결 실패, 쿼리 오류 등 서비스 계층에서 발생한 모든 예상치 못한 오류를 잡습니다.
-        print(f"Error fetching random question: {e}")
-        # 클라이언트에게는 500 Internal Server Error를 반환합니다.
-        raise HTTPException(status_code=500, detail="Failed to fetch question from service.")
+    Returns (JSON):
+        {
+            "id": <질문 ID>,
+            "question": <질문 내용>
+        }
 
-    # 2. 질문 존재 여부 확인
+    Raises:
+        HTTPException 404: 질문이 DB에 존재하지 않거나 비어있을 경우.
+    """
+
+    # ------------------------------------------------------------
+    # [1] 서비스 레이어 호출
+    # ------------------------------------------------------------
+    # - 비즈니스 로직은 router가 아니라 "service"에서 처리한다.
+    # - get_random_question() 함수는 DB에서 랜덤 질문 1개를 반환하거나,
+    #   없으면 None을 반환한다.
+    # - await 사용: 비동기(async) 환경이므로 반드시 await로 호출해야 함.
+    # ------------------------------------------------------------
+    question = await get_random_question()
+
+    # ------------------------------------------------------------
+    # [2] 결과 검증
+    # ------------------------------------------------------------
+    # 만약 DB에서 질문을 찾지 못하거나, 테이블이 비어있다면
+    # question_service는 None을 반환하기 때문에 404 에러를 발생시킨다.
+    # FastAPI의 HTTPException을 사용하면 자동으로
+    # JSON 형태의 에러 응답과 상태 코드를 만들어준다.
+    # ------------------------------------------------------------
     if not question:
-        # QuestionService가 질문을 찾지 못하고 None을 반환한 경우 (예: DB에 질문 없음)
-        # 클라이언트에게는 404 Not Found 예외를 반환합니다.
-        raise HTTPException(status_code=404, detail="No questions found in database.")
+        raise HTTPException(status_code=404, detail="질문 없음")
 
-    # 3. 응답 데이터 변환 및 반환
-    # Tortoise ORM 모델 객체(question)를 Pydantic 스키마(Question_Pydantic)로 변환합니다.
-    # 이 과정에서 DB에서 가져온 데이터가 응답 모델 형식과 일치하는지 검증됩니다.
-    return await Question_Pydantic.from_tortoise_orm(question)
+    # ------------------------------------------------------------
+    # [3] 정상 응답 반환
+    # ------------------------------------------------------------
+    # - FastAPI는 딕셔너리를 반환하면 자동으로 JSON Response로 변환한다.
+    # - question 객체는 Tortoise ORM 모델 객체이므로,
+    #   필요한 필드만 사전(dict) 형태로 추출하여 반환한다.
+    # ------------------------------------------------------------
+    return {
+        "id": question.id,
+        "question": question.question_text
+    }
