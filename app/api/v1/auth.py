@@ -1,8 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 
 from app.models.user import User
 from app.schemas.user import UserCreate, UserLogin, UserResponse, LoginResponse
-from app.services.auth_service import AuthService
 from app.core.security import get_current_user, create_access_token, oauth2_scheme
 from app.services.auth_service import AuthService
 
