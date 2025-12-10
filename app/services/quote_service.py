@@ -5,12 +5,7 @@ from fastapi import HTTPException, status
 from app.models.quote import Quote
 from app.models.user import User
 from app.models.bookmark import Bookmark
-from app.schemas.quote import QuoteBookmarkResponse
 
-
-#
-# from app.models import Quote, QuoteBookmark
-# from app.repositories.quotes import QuoteBookmarkRepository, QuoteRepository
 
 class QuoteService:
     @staticmethod
