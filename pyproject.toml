@@ -21,3 +21,11 @@ dependencies = [
     "tortoise-orm>=0.25.1",
     "uvicorn>=0.38.0",
 ]
+[tool.tortoise-orm]
+models = ["app.models", "aerich.models"]
+generate_schemas = true
+
+[tool.aerich]
+tortoise_orm = "app.db.base.TORTOISE_ORM"
+location = "./migrations"
+src_folder = "./."

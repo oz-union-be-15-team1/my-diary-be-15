@@ -2,8 +2,7 @@ from fastapi import HTTPException, status
 from tortoise.exceptions import IntegrityError
 
 from app.core.config import settings
-from app.models.user import User
-from app.models.token_blacklist import TokenBlacklist
+from app.models.user import User, TokenBlacklist
 from app.core.security import hash_password, verify_password, create_access_token, create_refresh_token
 from datetime import datetime, timezone
 
@@ -25,7 +24,7 @@ class AuthService:
     async def authenticate(username: str, password: str) -> User:
         user = await User.get_or_none(username=username)
         if not user or not verify_password(password, user.password_hash):
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+            raise HTTPException(status_code=400, detail="Incorrect credentials")
         return user
 
     @staticmethod
