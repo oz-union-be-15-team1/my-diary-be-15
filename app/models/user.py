@@ -33,4 +33,4 @@ class TokenBlacklist(models.Model):
     # 💡 관계 정의: user_id FK (USERS ||--o{ TOKEN_BLACKLIST)
     user = fields.ForeignKeyField('models.User', related_name='token_entries')
 
-    expired_at = fields.DatetimeField(default=lambda: datetime.now(timezone.utc))
+    expired_at = fields.DatetimeField(null=True)
