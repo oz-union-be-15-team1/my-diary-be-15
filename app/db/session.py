@@ -12,5 +12,3 @@ def init_tortoise(app: FastAPI) -> None:
         generate_schemas=False,       # 💡 False로 설정하여 마이그레이션 도구(Aerich)를 통해 스키마 관리
         add_exception_handlers=True,  # DB 관련 예외 핸들러(404 등) 자동 등록
     )
-    # register_tortoise가 내부적으로 app.on_event("startup") 및 "shutdown"에 연결 로직을 등록합니다.
-    print("✅ Tortoise ORM 연결 및 이벤트 등록 완료.")

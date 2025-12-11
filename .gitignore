@@ -271,6 +271,7 @@ celerybeat.pid
 
 # Environments
 .env
+.env.dev
 .venv
 env/
 venv/
@@ -310,6 +311,10 @@ cython_debug/
 .idea/
 .idea*
 
+# Visual Studio Code
+.vscode
+.vscode/*
+
 ### Python Patch ###
 # Poetry local configuration file - https://python-poetry.org/docs/configuration/#local-configuration
 poetry.toml
@@ -345,5 +350,9 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+# Migrated models
+migrations
+migrations/*
 
 # End of https://www.toptal.com/developers/gitignore/api/python,pycharm,macos,windows

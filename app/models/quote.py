@@ -1,5 +1,5 @@
 from tortoise import fields, models
-from bookmark import Bookmark
+from app.models.bookmark import Bookmark
 
 class Quote(models.Model):
     # QUOTES 테이블
@@ -10,6 +10,4 @@ class Quote(models.Model):
     # 💡 관계 정의: 역참조 (이 명언을 북마크한 사용자들)
     users_bookmarking: fields.ReverseRelation["Bookmark"]
 
-    def __str__(self):
-        return f"Quote by {self.author}"
 
